@@ -12,6 +12,9 @@ describe('effect', () => {
      * 为什么要用代理（proxy）？不能直接字面量吗？
      * 字面量同样可以创建一个对象但是不能拦截操作，尤其是set和get
      *
+     * 为什么要调用effect方法？
+     * 在vue3中 例如 const user = reactive({age: 10})  let age = user.age + 1 这里的 age依赖user.age 但是不会在user.age 变化时更新，一般采用 computed或者 watchEffect 或者 watch的方式进行更新 这些都在底层调用effect函数
+     *
      * 调用effect直接执行fn fn又涉及响应式更新所以要收集起来，等到下次代理数据变化的时候直接执行这个fn 就有响应式了
      * （代理对象调用 set 时执行所有依赖这个属性的fn）
      *
