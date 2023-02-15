@@ -32,4 +32,18 @@ describe('effect', () => {
     user.age++
     expect(nextAge).toBe(12)
   })
+
+  it('should return runner when call effect', () => {
+    // 执行effect传递一个fn，effect会返回一个方法 runner，执行runner再次执行fn 并且返回fn的返回值
+    let foo = 10
+
+    const runner = effect(() => {
+      foo++
+      return 'foo'
+    })
+    expect(foo).toBe(11)
+    const r = runner()
+    expect(foo).toBe(12)
+    expect(r).toBe('foo')
+  })
 })
