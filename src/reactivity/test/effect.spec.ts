@@ -1,10 +1,10 @@
 import { reactive } from '../reactive'
-import { effect } from '../effect'
+import { effect, stop } from '../effect'
 
 describe('effect', () => {
   it('happy path', () => {
     const user = reactive({
-      age: 10
+      age: 10,
     })
     let nextAge
 
@@ -45,5 +45,71 @@ describe('effect', () => {
     const r = runner()
     expect(foo).toBe(12)
     expect(r).toBe('foo')
+    runner()
+    expect(foo).toBe(13)
+  })
+
+  it('exist scheduler trigger data set dont run fn', () => {
+    let dummy
+    let run: any
+    const scheduler = jest.fn(() => {
+      run = runner
+    })
+    const obj = reactive({ foo: 1 })
+    const runner = effect(
+      () => {
+        dummy = obj.foo
+        return 'trigger runner'
+      },
+      { scheduler }
+    )
+    // 第一次 不触发 scheduler，只是执行fn
+    expect(scheduler).not.toHaveBeenCalled()
+    expect(dummy).toBe(1)
+    // 拦截set 执行 trigger
+    obj.foo++
+    // 只是执行 scheduler
+    expect(scheduler).toHaveBeenCalledTimes(1)
+    expect(dummy).toBe(1)
+    // 执行run，run是effect返回的fn，通过调用 scheduler 进行赋值，
+    // 通过上一节知道 runner 就是调用fn的一个方法，并且返回fn的返回值
+    const runnerRes = run()
+    expect(dummy).toBe(2)
+    expect(runnerRes).toBe('trigger runner')
+  })
+
+  it('stop can remove depend', () => {
+    const obj = reactive({ foo: 1 })
+    let count
+    const runner = effect(() => {
+      count = obj.foo
+    })
+    expect(count).toBe(1)
+    obj.foo++
+    expect(count).toBe(2)
+    stop(runner)
+    // 这里只能通过赋值的方式去测试，obj.foo++会先触发一次getter
+    // 那样依赖又被收集进去了
+    obj.foo = 3
+    expect(count).toBe(2)
+    runner()
+    expect(count).toBe(3)
+  })
+
+  it('noStop', () => {
+    // 调用 stop ，onStop会被执行
+    const obj = reactive({ foo: 1 })
+    const onStop = jest.fn()
+    let dummy
+    const runner = effect(
+      () => {
+        dummy = obj.foo
+      },
+      {
+        onStop,
+      }
+    )
+    stop(runner)
+    expect(onStop).toBeCalledTimes(1)
   })
 })
