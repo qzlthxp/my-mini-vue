@@ -52,6 +52,10 @@ export function track(target, key) {
     depsMap.set(key, dep)
   }
 
+  /**
+   * 如果只是简单创建一个响应式对象去访问一些属性，但是并没有调用 effect
+   * 函数的话，是不会去创建 effect实例的，所以 activeEffect 就是 undefined
+   */
   if (!activeEffect) return
 
   // 收集依赖
@@ -60,9 +64,6 @@ export function track(target, key) {
   /**
    * 反向收集，因为一个实例可以被收集到多个依赖集合所以存在数组里，
    * stop这一个全都移除
-   *
-   * 如果只是简单创建一个响应式对象去访问一些属性，但是并没有调用 effect
-   * 函数的话，是不会去创建 effect实例的，所以 activeEffect 就是 undefined
    */
   activeEffect.deps.push(dep)
 }
