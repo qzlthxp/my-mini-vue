@@ -4,7 +4,7 @@ import { effect, stop } from '../effect'
 describe('effect', () => {
   it('happy path', () => {
     const user = reactive({
-      age: 10,
+      age: 10
     })
     let nextAge
 
@@ -79,21 +79,27 @@ describe('effect', () => {
   })
 
   it('stop can remove depend', () => {
-    const obj = reactive({ foo: 1 })
-    let count
+    // 视频代码
+    let dummy
+    const obj = reactive({ prop: 1 })
     const runner = effect(() => {
-      count = obj.foo
+      dummy = obj.prop
     })
-    expect(count).toBe(1)
-    obj.foo++
-    expect(count).toBe(2)
+    obj.prop = 2
+    expect(dummy).toBe(2)
     stop(runner)
-    // 这里只能通过赋值的方式去测试，obj.foo++会先触发一次getter
-    // 那样依赖又被收集进去了
-    obj.foo = 3
-    expect(count).toBe(2)
+
+    obj.prop++
+    expect(dummy).toBe(2)
+
     runner()
-    expect(count).toBe(3)
+    expect(dummy).toBe(3)
+
+    obj.prop++
+    expect(dummy).toBe(3)
+
+    runner()
+    expect(dummy).toBe(4)
   })
 
   it('noStop', () => {
@@ -106,7 +112,7 @@ describe('effect', () => {
         dummy = obj.foo
       },
       {
-        onStop,
+        onStop
       }
     )
     stop(runner)
